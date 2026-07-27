@@ -231,6 +231,20 @@
   .confirm.show{ display:block; }
   form.hide{ display:none; }
 
+  .form-error{
+    display:none;
+    font-size:14px;
+    color:#E0968D; /* Penalty 300 — reads clearly on the dark navy hero */
+    max-width:420px;
+    margin:14px auto 0;
+  }
+  .form-error.show{ display:block; }
+
+  button:disabled{
+    opacity:0.7;
+    cursor:default;
+  }
+
   @media (max-width:480px){
     form{ flex-direction:column; }
     button{ width:100%; }
@@ -294,16 +308,22 @@
 
     <p class="subhead">
       Gross and net leaderboards, skins, tiebreakers, and payouts — calculated
-      accurately in seconds. Built for golf courses and
+      accurately in seconds, not spreadsheets. Built for golf courses and
       tournament directors running scrambles, leagues, and charity events.
     </p>
 
-    <form id="notify-form">
+    <form id="notify-form" action="https://app.us8.list-manage.com/subscribe/post?u=0e01d0ae947db9a9ac755627a&amp;id=089efb5962&amp;f_id=00cf04e1f0" method="post" name="mc-embedded-subscribe-form" novalidate>
       <label for="email" class="sr-only" style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0);">Email address</label>
-      <input type="email" id="email" name="email" placeholder="you@golfcourse.com" required autocomplete="email">
-      <button type="submit">Notify me</button>
+      <input type="email" id="email" name="EMAIL" placeholder="you@golfcourse.com" required autocomplete="email">
+      <!-- Mailchimp bot-trap field — must stay present and empty. Positioned off-canvas
+           rather than display:none, per Mailchimp's own guidance, so real users never see it. -->
+      <div style="position:absolute; left:-5000px;" aria-hidden="true">
+        <input type="text" name="b_0e01d0ae947db9a9ac755627a_089efb5962" tabindex="-1" value="">
+      </div>
+      <button type="submit" id="notify-submit">Notify me</button>
     </form>
-    <p class="confirm" id="confirm-msg">You're on the list. We'll email you when Dimples launches.</p>
+    <p class="confirm" id="confirm-msg">You're on the list — we'll email you when Dimples launches.</p>
+    <p class="form-error" id="error-msg"></p>
 
     <p class="form-note">No spam. One email, when we're live.</p>
 
@@ -311,21 +331,65 @@
 </main>
 
 <footer>
-  © 2026 Dimples · Built for directors who'd rather be on the course
+  © 2026 Dimples · built for directors who'd rather be on the course
 </footer>
 
 <script>
-  // Client-side only for now — no backend wired up yet.
-  // Replace this handler with a real POST to your signup endpoint / email
-  // service (e.g. Dimples.Web /api/v1/waitlist, Mailchimp, ConvertKit, etc.)
-  // once that's decided. Currently just confirms locally so the page is
-  // fully functional as a standalone file today.
+  // Submits to Mailchimp via its JSON-callback endpoint (post-json) instead of a normal
+  // form POST, so the page never redirects to Mailchimp's hosted response — the visitor
+  // stays here and sees our own confirmation message. This only fires the confirmation
+  // when Mailchimp actually reports success; real errors (e.g. already subscribed,
+  // invalid address) are shown instead of assumed away.
   document.getElementById('notify-form').addEventListener('submit', function(e){
     e.preventDefault();
     const form = e.target;
+    const submitBtn = document.getElementById('notify-submit');
     const confirmMsg = document.getElementById('confirm-msg');
-    form.classList.add('hide');
-    confirmMsg.classList.add('show');
+    const errorMsg = document.getElementById('error-msg');
+    const email = document.getElementById('email').value;
+    const botField = form.querySelector('input[name^="b_"]');
+
+    errorMsg.classList.remove('show');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
+
+    const callbackName = 'mcCallback_' + Date.now();
+    const script = document.createElement('script');
+
+    const cleanup = function(){
+      delete window[callbackName];
+      script.remove();
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Notify me';
+    };
+
+    const fallbackTimer = setTimeout(function(){
+      if (window[callbackName]){
+        cleanup();
+        errorMsg.textContent = "Something went wrong — please try again in a moment.";
+        errorMsg.classList.add('show');
+      }
+    }, 8000);
+
+    window[callbackName] = function(data){
+      clearTimeout(fallbackTimer);
+      cleanup();
+      if (data && data.result === 'success'){
+        form.classList.add('hide');
+        confirmMsg.classList.add('show');
+      } else {
+        errorMsg.textContent = (data && data.msg) ? data.msg.replace(/<[^>]+>/g, '') : "Something went wrong — please try again.";
+        errorMsg.classList.add('show');
+      }
+    };
+
+    const jsonpUrl = form.action.replace('/post?', '/post-json?')
+      + '&EMAIL=' + encodeURIComponent(email)
+      + '&' + encodeURIComponent(botField.name) + '=' + encodeURIComponent(botField.value)
+      + '&c=' + callbackName;
+
+    script.src = jsonpUrl;
+    document.body.appendChild(script);
   });
 </script>
 
