@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dimples — Coming 2027</title>
+<meta name="description" content="Dimples eliminates tournament-day chaos. Scores, skins, tiebreakers, and payouts calculated accurately in seconds. Coming 2027.">
+
+<!-- Fonts: Google Fonts CDN used here for portability of this standalone page.
+     Production Dimples.Web self-hosts Inter + Sora per dimples-typography-icons-addendum.md —
+     swap these two lines for local @font-face declarations if this page is folded into wwwroot. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@300&display=swap" rel="stylesheet">
+
+<!-- Favicon: app icon spec (mark alone, navy rounded-square bg, dark-bg dot colors) -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Crect width='44' height='44' rx='10' fill='%23122238'/%3E%3Ccircle cx='22' cy='22' r='8' fill='%23FFFFFF'/%3E%3Ccircle cx='22' cy='7' r='4' fill='%23E8C45A'/%3E%3Ccircle cx='37' cy='22' r='4' fill='%23E8C45A'/%3E%3Ccircle cx='22' cy='37' r='4' fill='%23E8C45A'/%3E%3Ccircle cx='7' cy='22' r='4' fill='%23E8C45A'/%3E%3C/svg%3E">
+
+<style>
+  :root{
+    /* --- Locked Dimples brand tokens (dimples-design-system.md / addenda) --- */
+    --navy-950:#0C1A2E;
+    --navy-900:#122238;
+    --navy-800:#1A3352;
+    --navy-700:#1E4068;
+    --gold-500:#B8890F;
+    --gold-300:#E8C45A;
+    --slate-300:#A8AABB;
+    --slate-100:#E4E6EE;
+    --white:#FFFFFF;
+
+    --font-ui:'Inter',sans-serif;
+    --font-wordmark:'Sora',sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+
+  body{
+    font-family:var(--font-ui);
+    background:var(--navy-900);
+    color:var(--white);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    overflow-x:hidden;
+  }
+
+  /* Signature element: golf-ball dimple texture, offset-row hex packing, very low opacity */
+  .dimple-field{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    background-image:
+      radial-gradient(circle, rgba(255,255,255,0.05) 1.4px, transparent 1.6px),
+      radial-gradient(circle, rgba(255,255,255,0.05) 1.4px, transparent 1.6px);
+    background-size:28px 28px, 28px 28px;
+    background-position:0 0, 14px 14px;
+    animation:drift 90s linear infinite;
+  }
+  @keyframes drift{
+    from{background-position:0 0, 14px 14px;}
+    to{background-position:280px 168px, 294px 182px;}
+  }
+
+  /* Radial vignette so the hero content stays the visual focus over the texture */
+  .vignette{
+    position:fixed;
+    inset:0;
+    z-index:1;
+    background:radial-gradient(ellipse at 50% 38%, rgba(18,34,56,0) 0%, rgba(12,26,46,0.55) 78%);
+    pointer-events:none;
+  }
+
+  main{
+    position:relative;
+    z-index:2;
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:64px 24px;
+  }
+
+  .hero{
+    max-width:800px;
+    width:100%;
+    text-align:center;
+  }
+
+  /* Logo lockup — Hero size per dimples-design-system.md §Lockup (52px mark / 38px font / 16px gap)
+     display:flex (not inline-flex) so this is a full-width block that stacks above the badge/headline
+     instead of sitting inline beside them on wide viewports. */
+  .lockup{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:16px;
+    margin-bottom:40px;
+    opacity:0;
+    animation:lockup-in 0.9s cubic-bezier(0.16,1,0.3,1) 0.15s forwards;
+  }
+  .lockup svg{
+    width:52px;
+    height:52px;
+    flex-shrink:0;
+  }
+  .lockup .dot-satellite{
+    transform-origin:22px 22px;
+    opacity:0;
+    animation:dot-settle 0.6s ease-out forwards;
+  }
+  .lockup .dot-top{ animation-delay:0.45s; }
+  .lockup .dot-right{ animation-delay:0.55s; }
+  .lockup .dot-bottom{ animation-delay:0.65s; }
+  .lockup .dot-left{ animation-delay:0.75s; }
+
+  .wordmark{
+    font-family:var(--font-wordmark);
+    font-weight:300;
+    font-size:38px;
+    letter-spacing:0.22em;
+    text-transform:uppercase;
+    color:var(--white);
+    line-height:1;
+  }
+
+  .eyebrow{
+    display:inline-block;
+    font-size:11px;
+    font-weight:500;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--navy-900);
+    background:var(--gold-300);
+    padding:6px 14px;
+    border-radius:999px;
+    margin-bottom:24px;
+    opacity:0;
+    animation:rise-in 0.7s cubic-bezier(0.16,1,0.3,1) 0.9s forwards;
+  }
+
+  h1{
+    font-family:var(--font-ui);
+    font-weight:700;
+    font-size:clamp(30px, 4.4vw, 46px);
+    line-height:1.15;
+    letter-spacing:-0.01em;
+    margin:0 0 20px;
+    color:var(--white);
+    text-wrap:balance;
+    opacity:0;
+    animation:rise-in 0.7s cubic-bezier(0.16,1,0.3,1) 1.05s forwards;
+  }
+
+  .subhead{
+    font-size:18px;
+    line-height:1.6;
+    color:var(--slate-300);
+    max-width:480px;
+    margin:0 auto 40px;
+    opacity:0;
+    animation:rise-in 0.7s cubic-bezier(0.16,1,0.3,1) 1.2s forwards;
+  }
+
+  form{
+    display:flex;
+    gap:10px;
+    max-width:420px;
+    margin:0 auto;
+    opacity:0;
+    animation:rise-in 0.7s cubic-bezier(0.16,1,0.3,1) 1.35s forwards;
+  }
+
+  input[type="email"]{
+    flex:1;
+    min-width:0;
+    font-family:var(--font-ui);
+    font-size:15px;
+    color:var(--white);
+    background:var(--navy-800);
+    border:1px solid var(--navy-700);
+    border-radius:8px;
+    padding:14px 16px;
+  }
+  input[type="email"]::placeholder{ color:var(--slate-300); opacity:0.85; }
+  input[type="email"]:focus{
+    outline:none;
+    border-color:var(--gold-300);
+    box-shadow:0 0 0 3px rgba(232,196,90,0.25);
+  }
+
+  button{
+    font-family:var(--font-ui);
+    font-size:15px;
+    font-weight:700;
+    color:var(--navy-900);
+    background:var(--gold-500);
+    border:none;
+    border-radius:8px;
+    padding:14px 22px;
+    cursor:pointer;
+    white-space:nowrap;
+    transition:background-color 0.15s ease, transform 0.15s ease;
+  }
+  button:hover{ background:var(--gold-300); }
+  button:active{ transform:translateY(1px); }
+  button:focus-visible{
+    outline:none;
+    box-shadow:0 0 0 3px rgba(232,196,90,0.45);
+  }
+
+  .form-note{
+    font-size:13px;
+    color:var(--slate-300);
+    margin-top:14px;
+    opacity:0;
+    animation:rise-in 0.7s cubic-bezier(0.16,1,0.3,1) 1.45s forwards;
+  }
+
+  .confirm{
+    display:none;
+    font-size:15px;
+    color:var(--gold-300);
+    font-weight:600;
+    max-width:420px;
+    margin:0 auto;
+    padding:14px 0;
+  }
+  .confirm.show{ display:block; }
+  form.hide{ display:none; }
+
+  @media (max-width:480px){
+    form{ flex-direction:column; }
+    button{ width:100%; }
+  }
+
+  footer{
+    position:relative;
+    z-index:2;
+    text-align:center;
+    padding:28px 24px 32px;
+    font-size:13px;
+    color:var(--slate-300);
+    opacity:0.75;
+  }
+
+  @keyframes rise-in{
+    from{ opacity:0; transform:translateY(10px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  @keyframes lockup-in{
+    from{ opacity:0; }
+    to{ opacity:1; }
+  }
+  @keyframes dot-settle{
+    from{ opacity:0; transform:scale(0.3); }
+    to{ opacity:1; transform:scale(1); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .dimple-field{ animation:none; }
+    .lockup, .eyebrow, h1, .subhead, form, .form-note, .dot-satellite{
+      animation:none !important;
+      opacity:1 !important;
+      transform:none !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="dimple-field" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+
+<main>
+  <div class="hero">
+
+    <div class="lockup">
+      <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dimples mark">
+        <circle cx="22" cy="22" r="8" fill="#FFFFFF"/>
+        <circle class="dot-satellite dot-top"    cx="22" cy="7"  r="4" fill="#E8C45A"/>
+        <circle class="dot-satellite dot-right"  cx="37" cy="22" r="4" fill="#E8C45A"/>
+        <circle class="dot-satellite dot-bottom" cx="22" cy="37" r="4" fill="#E8C45A"/>
+        <circle class="dot-satellite dot-left"   cx="7"  cy="22" r="4" fill="#E8C45A"/>
+      </svg>
+      <span class="wordmark">Dimples</span>
+    </div>
+
+    <span class="eyebrow">Coming 2027</span>
+
+    <h1>Eliminate tournament-day chaos.</h1>
+
+    <p class="subhead">
+      Gross and net leaderboards, skins, tiebreakers, and payouts — calculated
+      accurately in seconds, not spreadsheets. Built for golf courses and
+      tournament directors running scrambles, leagues, and charity events.
+    </p>
+
+    <form id="notify-form">
+      <label for="email" class="sr-only" style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0);">Email address</label>
+      <input type="email" id="email" name="email" placeholder="you@golfcourse.com" required autocomplete="email">
+      <button type="submit">Notify me</button>
+    </form>
+    <p class="confirm" id="confirm-msg">You're on the list — we'll email you when Dimples launches.</p>
+
+    <p class="form-note">No spam. One email, when we're live.</p>
+
+  </div>
+</main>
+
+<footer>
+  © 2026 Dimples · built for directors who'd rather be on the course
+</footer>
+
+<script>
+  // Client-side only for now — no backend wired up yet.
+  // Replace this handler with a real POST to your signup endpoint / email
+  // service (e.g. Dimples.Web /api/v1/waitlist, Mailchimp, ConvertKit, etc.)
+  // once that's decided. Currently just confirms locally so the page is
+  // fully functional as a standalone file today.
+  document.getElementById('notify-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    const form = e.target;
+    const confirmMsg = document.getElementById('confirm-msg');
+    form.classList.add('hide');
+    confirmMsg.classList.add('show');
+  });
+</script>
+
+</body>
+</html>
